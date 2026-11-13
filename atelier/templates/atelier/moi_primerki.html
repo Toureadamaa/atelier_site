@@ -1,0 +1,53 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Мои примерки{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Мастерская</div>{% endblock %}
+{% block page_title %}Мои примерки{% endblock %}
+{% block page_sub %}{{ n_vperedi }} {{ n_vperedi|plural:"предстоящая,предстоящие,предстоящих" }}{% if mesto %} · вы №{{ mesto }} в очереди на примерки (стаж {{ master.stazh }} {{ master.stazh|plural:"год,года,лет" }}){% endif %}{% endblock %}
+{% block content %}
+<div class="split-wide">
+  <div class="stack">
+  {% for p in primerki %}
+    <section class="card card--pad fitting">
+      <div class="row-x" style="align-items:flex-start;gap:18px">
+        <div class="datebox"><div class="m">{{ p.data|mes }}</div><div class="d">{{ p.data|date:"j" }}</div></div>
+        <div class="grow">
+          <div class="strong">{{ p.zakaz.klient.fio }}</div>
+          <div class="sub">{% icon "clock" %} {{ p.vremya|time:"H:i" }} · <a class="strong" href="{% url 'zakaz_detail' p.zakaz.pk %}">заказ №{{ p.zakaz.pk }}</a> · {{ p.zakaz.model.nazvanie }}</div>
+          {% if p.prichina == "opytnyi" %}
+            <div class="why why--top">{% icon "spark" %}<span>Назначена вам как <b>самому опытному мастеру</b> — стаж {{ master.stazh }}&nbsp;{{ master.stazh|plural:"год,года,лет" }}.</span></div>
+          {% elif p.prichina == "zanyaty" %}
+            <div class="why">{% icon "users" %}<span>Назначена вам: {% if p.zanyaty|length == 1 %}более опытный мастер в это время занят{% else %}более опытные мастера в это время заняты{% endif %} — {% for m in p.zanyaty %}{{ m.fio|fio_kratko }} ({{ m.stazh }}&nbsp;{{ m.stazh|plural:"год,года,лет" }}){% if not forloop.last %}, {% endif %}{% endfor %}.</span></div>
+          {% else %}
+            <div class="why why--hand">{% icon "user" %}<span>Мастера для этой примерки выбрал управляющий.</span></div>
+          {% endif %}
+          <form method="post" class="row-x mt-2" style="gap:10px">{% csrf_token %}<input type="hidden" name="primerka" value="{{ p.pk }}">
+            <input class="input" name="rezultat" value="{{ p.rezultat }}" placeholder="Например: ушить по талии на 1 см" aria-label="Результат примерки">
+            <button class="btn btn--line" type="submit" aria-label="Сохранить">{% icon "check" %} Сохранить</button></form>
+        </div>
+      </div>
+    </section>
+  {% empty %}<div class="card card--pad empty">Примерок нет.{% if mesto and mesto > 1 %} Примерка достанется вам, когда более опытные мастера будут заняты.{% endif %}</div>{% endfor %}
+  </div>
+
+  <aside class="card queue sticky">
+    <div class="card__head"><h3>Очередь на примерки</h3><span class="card__meta">по стажу</span></div>
+    <div class="card__body">
+      <p class="sub mb-2">Новую примерку получает <b>самый опытный свободный</b> портной или закройщик. Если он в это время занят — следующий по стажу.</p>
+      <ol class="list queue__list">
+      {% for s in ochered %}
+        <li{% if s.ya %} class="is-me"{% endif %}>
+          <span class="rank">{{ s.mesto }}</span><span class="av{% if s.ya %} av--ink{% endif %}">{{ s.m.fio|initials }}</span>
+          <div class="grow">
+            <div class="between"><span class="strong">{{ s.m.fio|fio_kratko }}{% if s.ya %} <span class="tag tag--chalk">вы</span>{% endif %}</span>
+              <span class="num sub nowrap">{{ s.n }} {{ s.n|plural:"примерка,примерки,примерок" }}</span></div>
+            <div class="sub mb-1">{{ s.m.get_dolzhnost_display }} · стаж {{ s.m.stazh }} {{ s.m.stazh|plural:"год,года,лет" }}</div>
+            <div class="meter"><span style="width:{{ s.pct }}%"></span></div>
+          </div>
+        </li>
+      {% endfor %}
+      </ol>
+      <div class="hint">Считаются предстоящие примерки. Порядок тот же, что в процедуре <span class="mono">Назначить_примерку</span>.</div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

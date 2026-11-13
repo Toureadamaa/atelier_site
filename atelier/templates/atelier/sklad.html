@@ -1,0 +1,24 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Склад{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Управление</div>{% endblock %}
+{% block page_title %}Склад материалов{% endblock %}
+{% block page_sub %}Остаток меняется только закупками (+) и списанием в заказы (−).{% endblock %}
+{% block page_actions %}<a class="btn btn--line" href="{% url 'material_new' %}">{% icon "plus" %} Материал</a><a class="btn btn--chalk" href="{% url 'zakupka_new' %}">{% icon "truck" %} Закупка</a>{% endblock %}
+{% block content %}
+<section class="card table-wrap">
+  <table class="tbl">
+    <thead><tr><th>Материал</th><th>Тип</th><th class="right">Остаток</th><th>Ед.</th><th class="right">Наличие</th></tr></thead>
+    <tbody>
+    {% for m in materialy %}
+      <tr data-href="{% url 'material_edit' m.pk %}">
+        <td><div class="who"><span class="av av--sq">{% icon "box" %}</span><div><div class="strong">{{ m.nazvanie }}</div><div class="sub mono">№ {{ m.pk|stringformat:"02d" }}</div></div></div></td>
+        <td>{{ m.tip }}</td>
+        <td class="right num"><span class="price" style="font-size:20px">{{ m.ostatok|floatformat:"-2" }}</span></td>
+        <td class="muted">{{ m.edinica_izmereniya }}</td>
+        <td class="right">{% if m.ostatok < 5 %}<span class="pill s-cancel">заканчивается</span>{% else %}<span class="pill s-ready">в наличии</span>{% endif %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="empty">Материалов нет.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

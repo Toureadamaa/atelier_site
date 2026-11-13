@@ -1,0 +1,28 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Мои заказы{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Личный кабинет</div>{% endblock %}
+{% block page_title %}Здравствуйте, {{ klient.fio }}{% endblock %}
+{% block page_sub %}Здесь видно, на каком этапе находится каждое ваше изделие.{% endblock %}
+{% block page_actions %}<a class="btn btn--line" href="{% url 'moi_zapisi' %}">{% icon "calendar" %} Записаться</a>{% endblock %}
+{% block content %}
+<div class="grid grid-2">
+{% for z in zakazy %}
+  <a class="card card--pad" href="{% url 'zakaz_detail' z.pk %}">
+    <div class="row-x mb-3" style="align-items:flex-start">
+      <div class="art art--xs k-{{ z.model.kategoriya|kat }}">{% garment z.model.kategoriya %}</div>
+      <div class="grow">
+        <div class="between"><h3 style="font-size:25px">{{ z.model.nazvanie }}</h3><span class="pill {{ z.status|st }}">{{ z.get_status_display }}</span></div>
+        <div class="sub mt-1">Заказ №{{ z.pk }} · оформлен {{ z.data_oformleniya|date:"j E Y" }} · <b class="num">{{ z.stoimost|rub }} ₽</b></div>
+      </div>
+    </div>
+    {% stepper z.status %}
+  </a>
+{% empty %}
+  <div class="card card--pad empty" style="grid-column:1/-1">
+    <h3 style="font-size:28px">У вас пока нет заказов</h3>
+    <p class="muted mt-1">Посмотрите каталог и запишитесь на консультацию — мастер поможет выбрать модель.</p>
+    <a class="btn" href="{% url 'katalog' %}">{% icon "book" %} Открыть каталог</a>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

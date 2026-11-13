@@ -1,0 +1,30 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Заказы{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Приём</div>{% endblock %}
+{% block page_title %}Заказы{% endblock %}
+{% block page_sub %}{{ zakazy|length }} {% if tekushii %}со статусом «{{ tekushii }}»{% else %}всего{% endif %}{% endblock %}
+{% block page_actions %}<a class="btn" href="{% url 'zakaz_new' %}">{% icon "plus" %} Оформить заказ</a>{% endblock %}
+{% block content %}
+<nav class="chips mb-3" aria-label="Фильтр по статусу">
+  <a class="chip {% if not tekushii %}is-on{% endif %}" href="?">Все</a>
+  {% for val, label in statusy %}<a class="chip {% if tekushii == val %}is-on{% endif %}" href="?status={{ val }}">{{ label }}</a>{% endfor %}
+</nav>
+<section class="card table-wrap">
+  <table class="tbl">
+    <thead><tr><th>№</th><th>Клиент</th><th class="hide-sm">Модель</th><th class="hide-sm">Оформлен</th><th class="hide-sm">Завершён</th><th class="right">Стоимость</th><th>Статус</th></tr></thead>
+    <tbody>
+    {% for z in zakazy %}
+      <tr data-href="{% url 'zakaz_detail' z.pk %}">
+        <td class="num muted mono">{{ z.pk|stringformat:"02d" }}</td>
+        <td><div class="who"><span class="av">{{ z.klient.fio|initials }}</span><div><div class="strong">{{ z.klient.fio }}</div><div class="sub num">{{ z.klient.telefon }}</div></div></div></td>
+        <td class="hide-sm">{{ z.model.nazvanie }}</td>
+        <td class="num hide-sm">{{ z.data_oformleniya|date:"d.m.Y" }}</td>
+        <td class="num muted hide-sm">{{ z.data_zaversheniya|date:"d.m.Y"|default:"—" }}</td>
+        <td class="right num strong nowrap">{{ z.stoimost|rub }} ₽</td>
+        <td><span class="pill {{ z.status|st }}">{{ z.get_status_display }}</span></td>
+      </tr>
+    {% empty %}<tr><td colspan="7" class="empty">Заказов нет.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

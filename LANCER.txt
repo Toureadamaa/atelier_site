@@ -1,0 +1,35 @@
+LANCER LE SITE DANS VS CODE
+===========================
+
+1. VS Code → File → Open Folder… → choisir ce dossier (celui qui contient manage.py).
+
+2. Terminal → New Terminal, puis :
+
+       pip install -r requirements.txt        (seulement la première fois)
+       python manage.py runserver
+
+   ou appuyer sur F5 (« Lancer le site (runserver) »).
+
+3. Ouvrir http://127.0.0.1:8000 dans le navigateur.  Arrêter le site : Ctrl+C dans le terminal.
+
+Base de données : SQL Server DESKTOP-7VAOGUU\SQLEXPRESS, base « projet corse »
+(réglages dans config/settings.py). Votre base est déjà prête : pas besoin de migrate.
+
+Comptes de démonstration
+    Управляющий   upravlyayushii   upr12345
+    Агент приёма  agent            agent12345
+    Мастер        master           master12345
+    Клиент        klient           klient12345
+
+VÉRIFICATION DES CONTRAINTES PAR SQL SERVER
+===========================================
+Les 26 règles du § 3.3 sont vérifiées par SQL Server (CHECK, UNIQUE, triggers).
+Django ne les vérifie plus lui-même : il envoie les données à la base, et si la base
+refuse, le message de SQL Server s'affiche au-dessus du formulaire
+(« База данных отклонила изменение: … »).
+
+Réglage : config/settings.py → PROVERKA_V_BAZE
+    True  (par défaut avec SQL Server) : seul SQL Server vérifie les règles ;
+    False : Django vérifie aussi (comme avant).
+Pour revenir à l'ancien comportement sans modifier le code :
+    set PROVERKA_V_BAZE=0     puis     python manage.py runserver

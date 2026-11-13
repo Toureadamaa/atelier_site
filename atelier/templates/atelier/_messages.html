@@ -1,0 +1,7 @@
+{% for m in messages %}
+<div class="toast{% if m.tags %} toast--{{ m.tags }}{% endif %}" role="status">
+  <svg class="ic"><use href="#i-{% if m.tags == 'error' %}alert{% else %}check{% endif %}"/></svg>
+  <span>{{ m }}</span>
+  <button type="button" class="toast__close" data-close aria-label="Закрыть"><svg class="ic" style="width:16px;height:16px"><use href="#i-x"/></svg></button>
+</div>
+{% endfor %}

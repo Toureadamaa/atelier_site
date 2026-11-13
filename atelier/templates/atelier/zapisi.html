@@ -1,0 +1,39 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Записи и примерки{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Приём</div>{% endblock %}
+{% block page_title %}Записи и примерки{% endblock %}
+{% block page_sub %}Расписание приёма клиентов на ближайшие дни.{% endblock %}
+{% block content %}
+<div class="split">
+  <div class="stack">
+    <section class="card">
+      <div class="card__head"><h3>Записи на приём</h3><span class="card__meta">{{ zapisi|length }}</span></div>
+      <div class="card__body"><ul class="list">
+      {% for z in zapisi %}
+        <li><div class="datebox"><div class="m">{{ z.data|mes }}</div><div class="d">{{ z.data|date:"j" }}</div></div>
+          <div class="grow"><a class="strong" href="{% url 'klient_detail' z.klient.pk %}">{{ z.klient.fio }}</a>
+            <div class="sub">{% icon "clock" %} {{ z.vremya|time:"H:i" }} · {{ z.get_tip_zapisi_display }}</div></div>
+          <form method="post" action="{% url 'zapis_delete' z.pk %}" data-confirm="Отменить запись клиента {{ z.klient.fio }}?">{% csrf_token %}<input type="hidden" name="next" value="{% url 'zapisi' %}">
+            <button class="btn btn--danger btn--sm" type="submit">{% icon "x" %} Отменить</button></form></li>
+      {% empty %}<li class="muted">Записей нет.</li>{% endfor %}
+      </ul></div>
+    </section>
+    <section class="card">
+      <div class="card__head"><h3>График примерок</h3><span class="card__meta">{{ primerki|length }}</span></div>
+      <div class="card__body"><ul class="list">
+      {% for p in primerki %}
+        <li><div class="datebox"><div class="m">{{ p.data|mes }}</div><div class="d">{{ p.data|date:"j" }}</div></div>
+          <div class="grow"><span class="strong">{{ p.zakaz.klient.fio }}</span>
+            <div class="sub">{% icon "clock" %} {{ p.vremya|time:"H:i" }} · {{ p.master.fio|default:"мастер не назначен" }}</div></div>
+          <a class="btn btn--line btn--sm" href="{% url 'zakaz_detail' p.zakaz.pk %}">Заказ №{{ p.zakaz.pk }}</a></li>
+      {% empty %}<li class="muted">Примерок нет.</li>{% endfor %}
+      </ul></div>
+    </section>
+  </div>
+  <aside class="card card--pad sticky">
+    <h3 class="title">Новая запись</h3>
+    <form method="post" novalidate>{% csrf_token %}{% include "atelier/_form_body.html" %}
+      <button class="btn btn--block" type="submit">{% icon "calendar" %} Записать</button></form>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% load static atelier_extras %}<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вход · Ателье</title>
+  <link href="{% static 'atelier/css/atelier.css' %}?v={{ v }}" rel="stylesheet">
+  <link rel="manifest" href="{% static 'atelier/pwa/manifest.webmanifest' %}">
+  <meta name="theme-color" content="#1e4a3d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ателье">
+  <link rel="apple-touch-icon" href="{% static 'atelier/pwa/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'atelier/pwa/favicon-32.png' %}">
+</head>
+<body>
+{% include "atelier/_icons.html" %}
+<div class="auth">
+  <section class="auth__art">
+    <a class="row-x" href="{% url 'katalog' %}">
+      <span class="mark">{% icon "scissors" %}</span>
+      <span><span class="brand-name">Ателье</span><span class="brand-sub">швейная мастерская</span></span>
+    </a>
+    <div class="art-big" aria-hidden="true">{% garment "платье" %}</div>
+    <h1>Каждый стежок —<br><em>по вашим меркам</em></h1>
+    <p>Заказы, мерки, примерки, мастера и склад тканей — вся мастерская в одном окне.</p>
+  </section>
+  <section class="auth__form">
+    <div class="auth__card">
+      <div class="eyebrow">Добро пожаловать</div>
+      <h2>Вход в систему</h2>
+      <p class="muted mb-3">Войдите под своей учётной записью сотрудника или клиента.</p>
+      <form method="post">{% csrf_token %}
+        {% if form.errors %}<div class="note note--danger mb-3">{% icon "alert" %}<div>Неверный логин или пароль.</div></div>{% endif %}
+        <div class="field"><label class="field__label" for="u">Логин</label>
+          <input id="u" name="username" class="input" autofocus required autocomplete="username"></div>
+        <div class="field"><label class="field__label" for="p">Пароль</label>
+          <div class="pwd"><input id="p" name="password" type="password" class="input" required autocomplete="current-password">
+            <button type="button" class="pwd__btn" data-pwd="p" aria-label="Показать пароль"><svg class="ic"><use href="#i-eye"/></svg></button></div></div>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button class="btn btn--block mt-1" type="submit" style="height:48px">Войти {% icon "arrow" %}</button>
+      </form>
+      <div class="demo">
+        <div class="demo__title">Тестовые учётные записи · нажмите, чтобы подставить</div>
+        <button type="button" data-login="upravlyayushii" data-pass="upr12345"><span>Управляющий</span><span><code>upravlyayushii</code> <code>upr12345</code></span></button>
+        <button type="button" data-login="agent" data-pass="agent12345"><span>Агент приёма</span><span><code>agent</code> <code>agent12345</code></span></button>
+        <button type="button" data-login="master" data-pass="master12345"><span>Мастер</span><span><code>master</code> <code>master12345</code></span></button>
+        <button type="button" data-login="klient" data-pass="klient12345"><span>Клиент</span><span><code>klient</code> <code>klient12345</code></span></button>
+      </div>
+      <a class="btn btn--ghost mt-2" href="{% url 'katalog' %}">{% icon "back" %} Вернуться в каталог</a>
+    </div>
+  </section>
+</div>
+<script src="{% static 'atelier/js/atelier.js' %}?v={{ v }}"></script>
+</body>
+</html>

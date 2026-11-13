@@ -1,0 +1,24 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Модели и цены{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Управление</div>{% endblock %}
+{% block page_title %}Модели и цены{% endblock %}
+{% block page_sub %}{{ modeli|length }} моделей в каталоге{% endblock %}
+{% block page_actions %}<a class="btn btn--line" href="{% url 'katalog' %}">{% icon "book" %} Витрина</a><a class="btn" href="{% url 'model_new' %}">{% icon "plus" %} Новая модель</a>{% endblock %}
+{% block content %}
+<section class="card table-wrap">
+  <table class="tbl">
+    <thead><tr><th>Модель</th><th>Категория</th><th class="hide-sm">Описание</th><th class="right">Цена</th><th></th></tr></thead>
+    <tbody>
+    {% for m in modeli %}
+      <tr data-href="{% url 'model_edit' m.pk %}">
+        <td><div class="who"><div class="art art--xs k-{{ m.kategoriya|kat }}">{% garment m.kategoriya %}</div><div><div class="strong">{{ m.nazvanie }}</div><div class="sub mono">№ {{ m.pk|stringformat:"02d" }}</div></div></div></td>
+        <td><span class="tag">{{ m.get_kategoriya_display }}</span></td>
+        <td class="sub hide-sm" style="max-width:340px">{{ m.opisanie|default:"—"|truncatechars:80 }}</td>
+        <td class="right num nowrap"><span class="price" style="font-size:20px">{{ m.cena|rub }} ₽</span></td>
+        <td class="right"><a class="icon-btn" style="display:inline-grid" href="{% url 'model_edit' m.pk %}" aria-label="Изменить">{% icon "edit" %}</a></td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="empty">Моделей нет.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

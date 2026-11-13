@@ -1,0 +1,72 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Мои задачи{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Мастерская</div>{% endblock %}
+{% block page_title %}Мои задачи{% endblock %}
+{% block page_sub %}{{ aktivnye|length }} в работе · {{ vypolnennye|length }} выполнено · стаж {{ master.stazh }} {{ master.stazh|plural:"год,года,лет" }}{% if mesto %} — №{{ mesto }} по опыту из {{ po_opytu|length }}{% endif %}{% endblock %}
+{% block content %}
+{% if master.stazh < 1 %}
+<div class="note mb-3">{% icon "alert" %}<div>Ваш стаж меньше 1 года, поэтому вам поручают только <b>простые задачи</b>. Сложные задачи выполняют мастера со стажем от 1 года (ограничение 23).</div></div>
+{% endif %}
+<div class="split-wide">
+  <div class="stack">
+  {% for z, form in aktivnye %}
+    <section class="card card--pad task {{ z.status|st }}">
+      <div class="between">
+        <span class="sub mono">Задача №{{ z.pk }} · {{ z.data_naznacheniya|date:"d.m.Y" }}</span>
+        <span class="pill {{ z.status|st }}">{{ z.get_status_display }}</span>
+      </div>
+      <h4>{{ z.opisanie }} {% if z.slozhnaya %}<span class="tag tag--chalk">сложная</span>{% endif %}</h4>
+      {% if z.slozhnaya %}
+        <div class="why why--top">{% icon "spark" %}<span><b>Сложная задача</b> поручена вам по опыту: стаж {{ master.stazh }}&nbsp;{{ master.stazh|plural:"год,года,лет" }}, а нужно не менее 1 года.</span></div>
+      {% else %}
+        <div class="why why--hand">{% icon "check" %}<span>Простая задача — её может выполнять мастер с любым стажем.</span></div>
+      {% endif %}
+      <div class="row-x" style="margin:16px 0 18px">
+        <div class="art art--xs k-{{ z.zakaz.model.kategoriya|kat }}">{% garment z.zakaz.model.kategoriya %}</div>
+        <div><a class="strong" href="{% url 'zakaz_detail' z.zakaz.pk %}">Заказ №{{ z.zakaz.pk }} · {{ z.zakaz.model.nazvanie }}</a>
+          <div class="sub">{{ z.zakaz.klient.fio }}</div></div>
+      </div>
+      <form method="post" class="task-update">{% csrf_token %}<input type="hidden" name="zadacha" value="{{ z.pk }}">
+        <div class="task-form">{{ form.status }}{{ form.kommentarii }}</div>
+        <div class="between mt-2">
+          <span class="hint" style="margin:0">«Проблема» + комментарий — если не хватает материала или есть дефект.</span>
+          <button class="btn btn--sm" type="submit">{% icon "check" %} Обновить</button>
+        </div>
+      </form>
+    </section>
+  {% empty %}
+    <div class="card card--pad empty">{% icon "check" "ic-lg" %}<div class="mt-1">Все задачи выполнены — отличная работа!</div></div>
+  {% endfor %}
+  {% if vypolnennye %}
+  <section class="card">
+    <div class="card__head"><h3>Выполненные</h3><span class="card__meta">{{ vypolnennye|length }}</span></div>
+    <div class="card__body"><ul class="list">
+      {% for z in vypolnennye %}<li><span class="pill s-ready">готово</span><span class="grow">{{ z.opisanie }}{% if z.slozhnaya %} <span class="tag tag--chalk">сложная</span>{% endif %}</span><a class="sub" href="{% url 'zakaz_detail' z.zakaz.pk %}">заказ №{{ z.zakaz.pk }}</a></li>{% endfor %}
+    </ul></div>
+  </section>
+  {% endif %}
+  </div>
+
+  <aside class="card queue queue--end sticky">
+    <div class="card__head"><h3>Мастера по опыту</h3><span class="card__meta">по стажу</span></div>
+    <div class="card__body">
+      <p class="sub mb-2">Сложные задачи поручают только мастерам со стажем <b>не менее 1 года</b> — ограничение 23, его проверяет триггер <span class="mono">TR_Задача_Стаж</span>.</p>
+      <ol class="list queue__list">
+      {% for s in po_opytu %}
+        <li{% if s.ya %} class="is-me"{% endif %}>
+          <span class="rank">{{ s.mesto }}</span><span class="av{% if s.ya %} av--ink{% endif %}">{{ s.m.fio|initials }}</span>
+          <div class="grow">
+            <div class="between"><span class="strong">{{ s.m.fio|fio_kratko }}{% if s.ya %} <span class="tag tag--chalk">вы</span>{% endif %}</span>
+              <span class="num sub nowrap">{{ s.m.n_otkr }} в работе</span></div>
+            <div class="sub mb-1">{{ s.m.get_dolzhnost_display }} · стаж&nbsp;{{ s.m.stazh }}&nbsp;{{ s.m.stazh|plural:"год,года,лет" }} ·
+              {% if s.m.stazh < 1 %}<span class="chalk">только&nbsp;простые</span>{% else %}сложных:&nbsp;{{ s.m.n_slozh }}{% endif %}</div>
+            <div class="meter"><span style="width:{{ s.pct }}%"></span></div>
+          </div>
+        </li>
+      {% endfor %}
+      </ol>
+      <div class="hint">Считаются задачи в работе (не выполненные).</div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

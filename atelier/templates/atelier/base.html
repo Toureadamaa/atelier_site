@@ -1,0 +1,126 @@
+{% load static atelier_extras %}<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Ателье{% endblock %} · Ателье</title>
+  <link rel="preload" href="{% static 'atelier/fonts/prata-cyrillic-400-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'atelier/fonts/onest-cyrillic-400-normal.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link href="{% static 'atelier/css/atelier.css' %}?v={{ v }}" rel="stylesheet">
+  <link rel="manifest" href="{% static 'atelier/pwa/manifest.webmanifest' %}">
+  <meta name="theme-color" content="#1e4a3d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ателье">
+  <link rel="apple-touch-icon" href="{% static 'atelier/pwa/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'atelier/pwa/favicon-32.png' %}">
+</head>
+<body>
+{% include "atelier/_icons.html" %}
+{% with u=request.resolver_match.url_name %}
+{% if is_agent or is_upr or is_master %}
+<!-- ================= Рабочее место сотрудника ================= -->
+<div class="shell">
+  <div class="scrim" id="scrim"></div>
+  <aside class="side" id="side" aria-label="Меню">
+    <div class="side__tape" aria-hidden="true"></div>
+    <div class="side__inner">
+    <a class="side__brand" href="{% url 'home' %}">
+      <span class="mark">{% icon "scissors" %}</span>
+      <span><span class="brand-name">Ателье</span><span class="brand-sub">швейная мастерская</span></span>
+    </a>
+    <nav class="side__nav">
+      {% if is_upr %}
+      <div class="side__label">Обзор</div>
+      <a class="side__link {% if u == 'panel' %}is-active{% endif %}" href="{% url 'panel' %}">{% icon "grid" %} Панель</a>
+      {% endif %}
+      {% if is_agent or is_upr %}
+      <div class="side__label">Приём</div>
+      <a class="side__link {% if u == 'klienty' or u == 'klient_detail' or u == 'klient_new' or u == 'klient_edit' or u == 'merki_edit' %}is-active{% endif %}" href="{% url 'klienty' %}">{% icon "users" %} Клиенты</a>
+      <a class="side__link {% if u == 'zakazy' or u == 'zakaz_detail' or u == 'zakaz_new' %}is-active{% endif %}" href="{% url 'zakazy' %}">{% icon "orders" %} Заказы</a>
+      <a class="side__link {% if u == 'zapisi' %}is-active{% endif %}" href="{% url 'zapisi' %}">{% icon "calendar" %} Записи и примерки</a>
+      {% endif %}
+      {% if is_upr %}
+      <div class="side__label">Управление</div>
+      <a class="side__link {% if u == 'mastera' or u == 'master_new' or u == 'master_edit' %}is-active{% endif %}" href="{% url 'mastera' %}">{% icon "user" %} Мастера</a>
+      <a class="side__link {% if u == 'modeli' or u == 'model_new' or u == 'model_edit' %}is-active{% endif %}" href="{% url 'modeli' %}">{% icon "shirt" %} Модели и цены</a>
+      <a class="side__link {% if u == 'sklad' or u == 'material_new' or u == 'material_edit' %}is-active{% endif %}" href="{% url 'sklad' %}">{% icon "box" %} Склад</a>
+      <a class="side__link {% if u == 'zakupki' or u == 'zakupka_new' %}is-active{% endif %}" href="{% url 'zakupki' %}">{% icon "truck" %} Закупки</a>
+      {% endif %}
+      {% if is_master %}
+      <div class="side__label">Мастерская</div>
+      <a class="side__link {% if u == 'moi_zadachi' %}is-active{% endif %}" href="{% url 'moi_zadachi' %}">{% icon "tasks" %} Мои задачи</a>
+      <a class="side__link {% if u == 'moi_primerki' %}is-active{% endif %}" href="{% url 'moi_primerki' %}">{% icon "ruler" %} Мои примерки</a>
+      {% endif %}
+      <div class="side__label">Витрина</div>
+      <a class="side__link {% if u == 'katalog' %}is-active{% endif %}" href="{% url 'katalog' %}">{% icon "book" %} Каталог моделей</a>
+    </nav>
+    <div class="side__foot">
+      <div class="me">
+        <span class="av av--ink">{{ user.get_full_name|default:user.username|initials }}</span>
+        <div class="grow">
+          <div class="me__name truncate">{{ user.get_full_name|default:user.username }}</div>
+          <div class="me__role truncate">{{ roli|join:", " }}</div>
+        </div>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+          <button class="icon-btn" title="Выйти" aria-label="Выйти">{% icon "logout" %}</button>
+        </form>
+      </div>
+    </div>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <button class="icon-btn" id="menuBtn" aria-label="Меню" aria-expanded="false">{% icon "menu" %}</button>
+      <span class="brand-name">Ателье</span>
+    </div>
+    <main class="page">
+{% else %}
+<!-- ================= Витрина и кабинет клиента ================= -->
+<header class="pub-head">
+  <div class="pub-head__inner">
+    <a class="brand" href="{% url 'katalog' %}">
+      <span class="mark">{% icon "scissors" %}</span>
+      <span><span class="brand-name">Ателье</span><span class="brand-sub">швейная мастерская</span></span>
+    </a>
+    <nav class="pub-nav">
+      <a class="{% if u == 'katalog' %}is-active{% endif %}" href="{% url 'katalog' %}">Каталог</a>
+      {% if is_klient %}
+      <a class="{% if u == 'moi_zakazy' or u == 'zakaz_detail' %}is-active{% endif %}" href="{% url 'moi_zakazy' %}">Мои заказы</a>
+      <a class="{% if u == 'moi_zapisi' %}is-active{% endif %}" href="{% url 'moi_zapisi' %}">Записи и примерки</a>
+      {% endif %}
+    </nav>
+    <div class="pub-user">
+      {% if user.is_authenticated %}
+        <span class="av hide-sm" title="{{ user.get_full_name|default:user.username }}">{{ user.get_full_name|default:user.username|initials }}</span>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn--line btn--sm">{% icon "logout" %} Выйти</button></form>
+      {% else %}
+        <a class="btn btn--sm" href="{% url 'login' %}">{% icon "login" %} Войти</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+<main class="pub-wrap">
+{% endif %}
+      {% include "atelier/_messages.html" %}
+      {% block head %}
+      <header class="page-head">
+        <div>
+          {% block eyebrow %}{% endblock %}
+          <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+          <div class="page-sub">{% block page_sub %}{% endblock %}</div>
+        </div>
+        <div class="page-actions">{% block page_actions %}{% endblock %}</div>
+      </header>
+      {% endblock %}
+      {% block content %}{% endblock %}
+{% if is_agent or is_upr or is_master %}
+    </main>
+  </div>
+</div>
+{% else %}
+</main>
+{% endif %}
+{% endwith %}
+<script src="{% static 'atelier/js/atelier.js' %}?v={{ v }}"></script>
+</body>
+</html>

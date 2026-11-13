@@ -1,0 +1,55 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Клиенты{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Приём</div>{% endblock %}
+{% block page_title %}Клиенты{% endblock %}
+{% block page_sub %}{{ klienty|length }} {% if q %}· {{ pole.0 }}: «{{ q }}»{% else %}в базе{% endif %}{% endblock %}
+{% block page_actions %}<a class="btn" href="{% url 'klient_new' %}">{% icon "plus" %} Зарегистрировать клиента</a>{% endblock %}
+{% block content %}
+<form class="searchbar" method="get" role="search" id="poisk">
+  <label class="searchbar__po">
+    <span class="field__label">Искать по</span>
+    <select class="select" name="po" id="po">
+      {% for kod, nazv, ph, hint in polya %}<option value="{{ kod }}" data-ph="{{ ph }}" data-hint="{{ hint }}"{% if kod == po %} selected{% endif %}>{{ nazv }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="searchbar__q">
+    <span class="field__label">Что ищем</span>
+    <span class="search">{% icon "search" %}<input class="input" name="q" id="q" value="{{ q }}" placeholder="{{ pole.1 }}" autocomplete="off"
+      {% if po == "telefon" or po == "nomer" %}inputmode="numeric"{% endif %}></span>
+  </label>
+  <div class="searchbar__actions">
+    <button class="btn" type="submit">Найти</button>
+    {% if q %}<a class="btn btn--line" href="{% url 'klienty' %}?po={{ po }}">Сбросить</a>{% endif %}
+  </div>
+</form>
+<div class="hint searchbar__hint" id="po-hint">{{ pole.2 }}</div>
+<section class="card table-wrap">
+  <table class="tbl">
+    <thead><tr><th>Клиент</th><th>Телефон</th><th class="hide-sm">E-mail</th><th class="hide-sm">С нами с</th><th class="right">Заказов</th></tr></thead>
+    <tbody>
+    {% for k in klienty %}
+      <tr data-href="{% url 'klient_detail' k.pk %}">
+        <td><div class="who"><span class="av">{{ k.fio|initials }}</span><div><div class="strong">{{ k.fio }}</div><div class="sub mono">№ {{ k.pk|stringformat:"03d" }}</div></div></div></td>
+        <td class="num nowrap">{{ k.telefon }}</td>
+        <td class="hide-sm">{{ k.email|default:"—" }}</td>
+        <td class="num hide-sm">{{ k.data_registracii|date:"d.m.Y" }}</td>
+        <td class="right"><span class="tag">{{ k.n_zakazov }}</span></td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="empty">{% if q %}По полю «{{ pole.0 }}» никого не найдено.{% else %}Клиентов пока нет.{% endif %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+<script>
+(function () {
+  var po = document.getElementById("po"), q = document.getElementById("q"), hint = document.getElementById("po-hint");
+  po.addEventListener("change", function () {
+    var opt = po.options[po.selectedIndex];
+    q.placeholder = opt.dataset.ph;
+    hint.textContent = opt.dataset.hint;
+    if (po.value === "telefon" || po.value === "nomer") q.setAttribute("inputmode", "numeric"); else q.removeAttribute("inputmode");
+    if (q.value.trim()) document.getElementById("poisk").submit();   // запрос уже введён — сразу ищем по новому полю
+    else q.focus();
+  });
+})();
+</script>
+{% endblock %}

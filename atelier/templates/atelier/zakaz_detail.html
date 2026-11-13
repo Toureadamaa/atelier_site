@@ -1,0 +1,109 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Заказ №{{ zakaz.pk }}{% endblock %}
+{% block eyebrow %}<a class="eyebrow" href="{% if is_klient and not is_agent and not is_upr %}{% url 'moi_zakazy' %}{% elif is_master and not is_upr and not is_agent %}{% url 'moi_zadachi' %}{% else %}{% url 'zakazy' %}{% endif %}">{% icon "back" %} Назад</a>{% endblock %}
+{% block page_title %}Заказ №{{ zakaz.pk }}{% endblock %}
+{% block page_sub %}{{ zakaz.model.nazvanie }} · оформлен {{ zakaz.data_oformleniya|date:"j E Y" }}{% endblock %}
+{% block page_actions %}<span class="pill pill--lg {{ zakaz.status|st }}">{{ zakaz.get_status_display }}</span>{% endblock %}
+{% block content %}
+<section class="card card--pad mb-3">{% stepper zakaz.status %}</section>
+
+{% if status_form or zadacha_form or primerka_form or material_form %}<div class="split">{% else %}<div>{% endif %}
+  <div class="stack">
+    <section class="card card--pad">
+      <div class="row-x" style="align-items:flex-start;gap:26px;flex-wrap:wrap">
+        <div class="art art--sm k-{{ zakaz.model.kategoriya|kat }}">{% garment zakaz.model.kategoriya %}</div>
+        <div class="grow">
+          <div class="facts">
+            <div class="fact"><div class="k">Клиент</div><div class="v">
+              {% if is_agent or is_upr %}<a class="strong" href="{% url 'klient_detail' zakaz.klient.pk %}">{{ zakaz.klient.fio }}</a>{% else %}{{ zakaz.klient.fio }}{% endif %}</div>
+              <div class="sub num">{{ zakaz.klient.telefon }}</div></div>
+            <div class="fact"><div class="k">Модель</div><div class="v">{{ zakaz.model.nazvanie }}</div><div class="sub">{{ zakaz.model.get_kategoriya_display }}</div></div>
+            <div class="fact"><div class="k">Стоимость</div><div class="v big num">{{ zakaz.stoimost|rub }} ₽</div></div>
+            <div class="fact"><div class="k">Оформлен</div><div class="v num">{{ zakaz.data_oformleniya|date:"d.m.Y" }}</div></div>
+            <div class="fact"><div class="k">Завершён</div><div class="v num">{{ zakaz.data_zaversheniya|date:"d.m.Y"|default:"—" }}</div></div>
+          </div>
+          {% if merki %}
+          <hr>
+          <div class="fact mb-2"><div class="k">Мерки клиента · {{ merki.data_snyatiya|date:"d.m.Y" }}</div></div>
+          <div class="measures" style="max-width:440px">
+            <div class="measure"><div class="k">грудь, см</div><div class="v num">{{ merki.grud|floatformat:"-1" }}</div></div>
+            <div class="measure"><div class="k">талия, см</div><div class="v num">{{ merki.taliya|floatformat:"-1" }}</div></div>
+            <div class="measure"><div class="k">бёдра, см</div><div class="v num">{{ merki.bedra|floatformat:"-1" }}</div></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head"><h3>Задачи мастеров</h3><span class="card__meta">{{ zadachi|length }}</span></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>№</th><th>Работа</th><th>Мастер</th><th>Статус</th></tr></thead>
+          <tbody>
+          {% for z in zadachi %}
+            <tr><td class="num muted mono">{{ z.pk }}</td>
+              <td><div class="strong">{{ z.opisanie }}</div>
+                <div class="sub">назначена {{ z.data_naznacheniya|date:"d.m.Y" }}</div>
+                {% if z.slozhnaya %}<span class="tag tag--chalk mt-1">сложная</span>{% endif %}
+                {% if z.kommentarii %}<div class="sub mt-1">«{{ z.kommentarii }}»</div>{% endif %}</td>
+              <td><div>{{ z.master.fio }}</div><div class="sub">{{ z.master.get_dolzhnost_display }}</div></td>
+              <td><span class="pill {{ z.status|st }}">{{ z.get_status_display }}</span></td></tr>
+          {% empty %}<tr><td colspan="4" class="empty">Задачи ещё не назначены.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="grid grid-auto">
+      <section class="card">
+        <div class="card__head"><h3>Примерки</h3></div>
+        <div class="card__body"><ul class="list">
+          {% for p in primerki %}
+          <li><div class="datebox"><div class="m">{{ p.data|mes }}</div><div class="d">{{ p.data|date:"j" }}</div></div>
+            <div><div class="strong">{% icon "clock" %} {{ p.vremya|time:"H:i" }}{% if p.master %} · {{ p.master.fio }}{% endif %}</div>
+              <div class="sub">{{ p.rezultat|default:"Результат ещё не внесён" }}</div></div></li>
+          {% empty %}<li class="muted">Примерок не назначено.</li>{% endfor %}
+        </ul></div></section>
+      {% if not is_klient or is_agent or is_upr %}
+      <section class="card">
+        <div class="card__head"><h3>Материалы</h3></div>
+        <div class="card__body"><ul class="list">
+          {% for p in pozicii %}<li>{% icon "box" %}<span class="grow">{{ p.material.nazvanie }}</span><b class="num">{{ p.kolichestvo|floatformat:"-2" }} {{ p.material.edinica_izmereniya }}</b></li>
+          {% empty %}<li class="muted">Материалы не списаны.</li>{% endfor %}
+        </ul></div></section>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if status_form or zadacha_form or primerka_form or material_form %}
+  <aside class="stack">
+    {% if status_form %}
+    <section class="card card--pad"><h3 class="title">Статус заказа</h3>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="status">
+        {% with form=status_form %}{% include "atelier/_form_body.html" %}{% endwith %}
+        <button class="btn btn--block" type="submit">{% icon "check" %} Сохранить</button></form></section>
+    {% endif %}
+    {% if zadacha_form %}
+    <section class="card card--pad"><h3 class="title">Назначить мастера</h3>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="zadacha">
+        {% with form=zadacha_form %}{% include "atelier/_form_body.html" %}{% endwith %}
+        <button class="btn btn--line btn--block" type="submit">{% icon "user" %} Назначить</button></form></section>
+    {% endif %}
+    {% if primerka_form %}
+    <section class="card card--pad"><h3 class="title">Назначить примерку</h3>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="primerka">
+        {% with form=primerka_form %}{% include "atelier/_form_body.html" %}{% endwith %}
+        <button class="btn btn--line btn--block" type="submit">{% icon "calendar" %} Добавить</button></form></section>
+    {% endif %}
+    {% if material_form %}
+    <section class="card card--pad"><h3 class="title">Списать материал</h3>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="material">
+        {% with form=material_form %}{% include "atelier/_form_body.html" %}{% endwith %}
+        <div class="hint mb-2">После списания позицию нельзя изменить; остаток на складе уменьшится.</div>
+        <button class="btn btn--line btn--block" type="submit">{% icon "box" %} Списать со склада</button></form></section>
+    {% endif %}
+  </aside>
+  {% endif %}
+</div>
+{% endblock %}

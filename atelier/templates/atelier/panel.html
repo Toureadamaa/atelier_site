@@ -1,0 +1,105 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Панель управляющего{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Обзор · {% now "j E Y" %}</div>{% endblock %}
+{% block page_title %}Добрый день{% if user.first_name %}, {{ user.first_name }}{% endif %}{% endblock %}
+{% block page_sub %}Сводка по мастерской: заказы, мастера и склад.{% endblock %}
+{% block page_actions %}
+  <a class="btn btn--line" href="{% url 'zakupka_new' %}">{% icon "truck" %} Закупка</a>
+  <a class="btn" href="{% url 'zakaz_new' %}">{% icon "plus" %} Новый заказ</a>
+{% endblock %}
+{% block content %}
+<div class="grid grid-4 mb-3">
+  <div class="card kpi kpi--ink">
+    <div class="kpi__label">{% icon "coins" %} Выручка по выданным</div>
+    <div class="kpi__value num"><span data-count="{{ vyruchka|floatformat:'0' }}">{{ vyruchka|rub }}</span><small>₽</small></div></div>
+  <div class="card kpi">
+    <div class="kpi__label">{% icon "orders" %} Заказов в работе</div>
+    <div class="kpi__value num"><span data-count="{{ n_aktivnyh }}">{{ n_aktivnyh }}</span><small>из {{ vsego_zakazov }}</small></div></div>
+  <div class="card kpi">
+    <div class="kpi__label">{% icon "spark" %} Средний чек</div>
+    <div class="kpi__value num"><span data-count="{{ sredniy_chek|floatformat:'0' }}">{{ sredniy_chek|rub }}</span><small>₽</small></div></div>
+  <div class="card kpi">
+    <div class="kpi__label">{% icon "users" %} Клиентов в базе</div>
+    <div class="kpi__value num"><span data-count="{{ n_klientov }}">{{ n_klientov }}</span></div></div>
+</div>
+
+<section class="card mb-3">
+  <div class="card__head"><h3>Заказы по этапам</h3><span class="card__meta">всего {{ vsego_zakazov }}</span></div>
+  <div class="card__body">
+    <div class="dist" role="img" aria-label="Распределение заказов по статусам">
+      {% for s in statusy %}{% if s.n %}<span class="{{ s.code|st }}" style="flex:{{ s.n }}" title="{{ s.label }}: {{ s.n }}"></span>{% endif %}{% endfor %}
+    </div>
+    <div class="legend">
+      {% for s in statusy %}
+      <a class="{{ s.code|st }}" href="{% url 'zakazy' %}?status={{ s.code }}"><span class="sw"></span>{{ s.label }}<b>{{ s.n }}</b></a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if bez_zadach or problemy %}
+<div class="stack-sm mb-3">
+  {% if bez_zadach %}<div class="note">{% icon "alert" %}<div><b>{{ bez_zadach }}</b> активн. заказ(ов) без назначенных мастеров. <a href="{% url 'zakazy' %}?status=новый">Распределить</a></div></div>{% endif %}
+  {% for z in problemy %}<div class="note note--danger">{% icon "alert" %}<div><b>Проблема</b> · <a href="{% url 'zakaz_detail' z.zakaz.pk %}">заказ №{{ z.zakaz.pk }}</a>, {{ z.master.fio }}: {{ z.kommentarii|default:z.opisanie }}</div></div>{% endfor %}
+</div>
+{% endif %}
+
+<div class="split-wide">
+  <section class="card">
+    <div class="card__head"><h3>Активные заказы</h3><a class="card__meta" href="{% url 'zakazy' %}">Все заказы →</a></div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th class="hide-sm">№</th><th>Клиент и модель</th><th class="right hide-sm">Сумма</th><th>Статус</th></tr></thead>
+        <tbody>
+        {% for z in aktivnye %}
+          <tr data-href="{% url 'zakaz_detail' z.pk %}">
+            <td class="num muted hide-sm mono">{{ z.pk|stringformat:"02d" }}</td>
+            <td><div class="who"><span class="av">{{ z.klient.fio|initials }}</span><div><div class="strong">{{ z.klient.fio }}</div><div class="sub">{{ z.model.nazvanie }}</div></div></div></td>
+            <td class="right num nowrap hide-sm">{{ z.stoimost|rub }} ₽</td>
+            <td><span class="pill {{ z.status|st }}">{{ z.get_status_display }}</span></td>
+          </tr>
+        {% empty %}<tr><td colspan="4" class="empty">Активных заказов нет.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <div class="stack">
+    <section class="card">
+      <div class="card__head"><h3>Загрузка мастеров</h3><a class="card__meta" href="{% url 'mastera' %}">Все →</a></div>
+      <div class="card__body">
+        <ul class="list">
+        {% for m in zagruzka %}
+          <li><span class="av">{{ m.fio|initials }}</span>
+            <div class="grow">
+              <div class="between"><span class="strong">{{ m.fio }}</span><span class="num sub">{{ m.n }} в работе</span></div>
+              <div class="sub mb-1">{{ m.get_dolzhnost_display }}</div>
+              <div class="meter"><span style="width:{{ m.pct }}%"></span></div>
+            </div></li>
+        {% empty %}<li class="muted">Открытых задач нет.</li>{% endfor %}
+        </ul>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card__head"><h3>Ближайшие примерки</h3></div>
+      <div class="card__body">
+        <ul class="list">
+        {% for p in blizhaishie %}
+          <li><div class="datebox"><div class="m">{{ p.data|mes }}</div><div class="d">{{ p.data|date:"j" }}</div></div>
+            <div class="grow"><a class="strong" href="{% url 'zakaz_detail' p.zakaz.pk %}">{{ p.zakaz.klient.fio }}</a>
+              <div class="sub">{% icon "clock" %} {{ p.vremya|time:"H:i" }} · заказ №{{ p.zakaz.pk }}{% if p.master %} · {{ p.master.fio }}{% endif %}</div></div></li>
+        {% empty %}<li class="muted">Примерок не запланировано.</li>{% endfor %}
+        </ul>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card__head"><h3>Склад</h3><a class="card__meta" href="{% url 'sklad' %}">Склад →</a></div>
+      <div class="card__body">
+        {% if malo %}
+        <ul class="list">{% for m in malo %}<li><span class="pill s-cancel">мало</span><span class="grow">{{ m.nazvanie }}</span><b class="num">{{ m.ostatok|floatformat:"-2" }} {{ m.edinica_izmereniya }}</b></li>{% endfor %}</ul>
+        <a class="btn btn--chalk btn--sm mt-2" href="{% url 'zakupka_new' %}">{% icon "truck" %} Оформить закупку</a>
+        {% else %}<div class="row-x muted">{% icon "check" %} Все материалы в наличии (остаток ≥ 5).</div>{% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

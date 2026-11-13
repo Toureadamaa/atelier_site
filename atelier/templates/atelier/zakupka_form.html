@@ -1,0 +1,22 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Новая закупка{% endblock %}
+{% block eyebrow %}<a class="eyebrow" href="{% url 'zakupki' %}">{% icon "back" %} Закупки</a>{% endblock %}
+{% block page_title %}Новая закупка{% endblock %}
+{% block page_sub %}Пустые строки игнорируются. После проведения остатки на складе увеличатся.{% endblock %}
+{% block content %}
+<form method="post" novalidate class="card card--pad" style="max-width:900px">{% csrf_token %}
+  <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:0 18px">{% field form.data %}{% field form.postavshik %}</div>
+  <hr>
+  <div class="eyebrow mb-2">Позиции</div>
+  {% for e in pozicii.non_field_errors %}<div class="note note--danger mb-2">{% icon "alert" %}<div>{{ e }}</div></div>{% endfor %}
+  {% for m, q in pozicii.stroki %}
+  <div class="grid" style="grid-template-columns:34px minmax(0,2fr) minmax(0,1fr);gap:0 14px;align-items:start">
+    <div class="mono muted" style="padding-top:38px;text-align:center">{{ forloop.counter|stringformat:"02d" }}</div>
+    {% field m %}{% field q %}
+  </div>
+  {% endfor %}
+  <hr>
+  <div class="form-actions"><button class="btn btn--chalk" type="submit">{% icon "truck" %} Провести закупку</button>
+    <a class="btn btn--line" href="{% url 'zakupki' %}">Отмена</a></div>
+</form>
+{% endblock %}

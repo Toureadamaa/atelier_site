@@ -1,0 +1,27 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Мастера{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Управление</div>{% endblock %}
+{% block page_title %}Мастера{% endblock %}
+{% block page_sub %}Штат мастерской и текущая загрузка{% endblock %}
+{% block page_actions %}<a class="btn" href="{% url 'master_new' %}">{% icon "plus" %} Принять на работу</a>{% endblock %}
+{% block content %}
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">
+  {% for m in mastera %}
+  <a class="card card--pad" href="{% url 'master_edit' m.pk %}"{% if not m.rabotaet %} style="opacity:.6"{% endif %}>
+    <div class="row-x mb-3">
+      <span class="av av--lg">{{ m.fio|initials }}</span>
+      <div class="grow"><div class="strong">{{ m.fio }}</div><div class="sub">{{ m.get_dolzhnost_display }}</div></div>
+    </div>
+    <div class="facts" style="grid-template-columns:1fr 1fr">
+      <div class="fact"><div class="k">Стаж</div><div class="v big num">{{ m.stazh }} <small class="sub">лет</small></div></div>
+      <div class="fact"><div class="k">В работе</div><div class="v big num">{{ m.n }}</div></div>
+    </div>
+    <hr style="margin:16px 0 12px">
+    <div class="between">
+      <span class="sub num">{% icon "phone" %} {{ m.nomer_telefona }}</span>
+      {% if m.rabotaet %}<span class="pill s-ready">работает</span>{% else %}<span class="pill s-new">уволен</span>{% endif %}
+    </div>
+  </a>
+  {% empty %}<div class="card card--pad empty" style="grid-column:1/-1">Мастеров нет.</div>{% endfor %}
+</div>
+{% endblock %}

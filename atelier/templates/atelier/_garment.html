@@ -1,0 +1,32 @@
+<svg viewBox="0 0 120 160" class="garment" aria-hidden="true">
+{% if k == "plate" %}
+  <path d="M46 14 Q60 28 74 14 L81 19 L76 46 Q74 57 78 64 L101 146 Q60 157 19 146 L42 64 Q46 57 44 46 L39 19 Z"/>
+  <path class="stitch" d="M43 63 Q60 70 77 63"/><path class="stitch" d="M30 132 Q60 141 90 132"/>
+{% elif k == "kost" %}
+  <path d="M40 16 L52 11 L60 30 L68 11 L80 16 L101 30 L105 98 L91 100 L88 62 L87 142 L33 142 L32 62 L29 100 L15 98 L19 30 Z"/>
+  <path class="fill-none" d="M52 11 L55 62 L60 30 M68 11 L65 62 L60 30"/>
+  <circle cx="60" cy="80" r="2.2" fill="#241a2e"/><circle cx="60" cy="96" r="2.2" fill="#241a2e"/>
+  <path class="stitch" d="M40 108 H52 M68 108 H80"/>
+{% elif k == "palto" %}
+  <path d="M42 14 L52 10 L60 26 L68 10 L78 14 L98 28 L104 104 L90 106 L88 60 L90 152 L30 152 L32 60 L30 106 L16 104 L22 28 Z"/>
+  <path class="fill-none" d="M52 10 L54 56 L60 26 M68 10 L66 56 L60 26 M60 56 V152"/>
+  <path class="stitch" d="M32 86 H88"/>
+  <circle cx="53" cy="70" r="2" fill="#241a2e"/><circle cx="67" cy="70" r="2" fill="#241a2e"/>
+  <circle cx="53" cy="100" r="2" fill="#241a2e"/><circle cx="67" cy="100" r="2" fill="#241a2e"/>
+{% elif k == "yubka" %}
+  <path d="M36 22 H84 V33 H36 Z"/>
+  <path d="M36 33 H84 L102 142 Q60 152 18 142 Z"/>
+  <path class="stitch fill-none" d="M48 34 L40 145 M60 34 V148 M72 34 L80 145"/>
+{% elif k == "bryuki" %}
+  <path d="M37 16 H83 L88 148 H66 L60 56 L54 148 H32 Z"/>
+  <path class="fill-none" d="M37 27 H83"/>
+  <path class="stitch fill-none" d="M45 30 L43 146 M75 30 L77 146"/>
+  <circle cx="60" cy="21.5" r="1.8" fill="#241a2e"/>
+{% else %}
+  <path d="M44 16 L52 11 Q60 21 68 11 L76 16 L101 34 L92 54 L84 47 L84 142 L36 142 L36 47 L28 54 L19 34 Z"/>
+  <path class="fill-none" d="M52 11 L55 26 L60 19 L65 26 L68 11 M60 19 V142"/>
+  <circle cx="60" cy="44" r="1.8" fill="#241a2e"/><circle cx="60" cy="64" r="1.8" fill="#241a2e"/>
+  <circle cx="60" cy="84" r="1.8" fill="#241a2e"/><circle cx="60" cy="104" r="1.8" fill="#241a2e"/>
+  <path class="stitch fill-none" d="M66 56 H78 V68 H66 Z"/>
+{% endif %}
+</svg>

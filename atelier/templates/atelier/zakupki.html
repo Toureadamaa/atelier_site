@@ -1,0 +1,21 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Закупки{% endblock %}
+{% block eyebrow %}<div class="eyebrow">Управление</div>{% endblock %}
+{% block page_title %}Закупки материалов{% endblock %}
+{% block page_sub %}Каждая проведённая закупка увеличивает остатки на складе.{% endblock %}
+{% block page_actions %}<a class="btn btn--chalk" href="{% url 'zakupka_new' %}">{% icon "plus" %} Новая закупка</a>{% endblock %}
+{% block content %}
+<div class="stack">
+{% for z in zakupki %}
+  <section class="card card--pad">
+    <div class="row-x" style="align-items:flex-start;gap:18px">
+      <div class="datebox"><div class="m">{{ z.data|mes }}</div><div class="d">{{ z.data|date:"j" }}</div></div>
+      <div class="grow">
+        <div class="between"><span class="strong">{{ z.postavshik }}</span><span class="sub mono">Закупка №{{ z.pk }} · {{ z.data|date:"d.m.Y" }}</span></div>
+        <div class="cluster mt-2">{% for p in z.pozicii.all %}<span class="chip-box">{{ p.material.nazvanie }} <span class="n">+{{ p.kolichestvo|floatformat:"-2" }} {{ p.material.edinica_izmereniya }}</span></span>{% endfor %}</div>
+      </div>
+    </div>
+  </section>
+{% empty %}<div class="card card--pad empty">Закупок пока не было.</div>{% endfor %}
+</div>
+{% endblock %}

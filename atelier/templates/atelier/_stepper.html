@@ -1,0 +1,12 @@
+{% if otmenen %}
+  <div class="note note--danger"><svg class="ic"><use href="#i-x"/></svg><div><b>Заказ отменён.</b></div></div>
+{% else %}
+<ol class="steps{% if mini %} steps--mini{% endif %}" aria-label="Этапы заказа">
+  {% for s in shagi %}
+  <li class="{% if s.state == 'done' %}is-done{% elif s.state == 'cur' %}is-cur{% endif %}"{% if s.state == 'cur' %} aria-current="step"{% endif %}>
+    <span class="mark-step">{% if s.state == "done" %}<svg class="ic" style="width:13px;height:13px"><use href="#i-check"/></svg>{% else %}{{ forloop.counter }}{% endif %}</span>
+    {{ s.label }}
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}

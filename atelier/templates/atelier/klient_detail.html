@@ -1,0 +1,68 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}{{ klient.fio }}{% endblock %}
+{% block head %}
+<header class="page-head">
+  <div>
+    <a class="eyebrow" href="{% url 'klienty' %}">{% icon "back" %} Клиенты</a>
+    <div class="profile mt-2">
+      <span class="av av--lg av--ink">{{ klient.fio|initials }}</span>
+      <div>
+        <h1>{{ klient.fio }}</h1>
+        <div class="profile__meta">
+          <span>{% icon "phone" %} <span class="num">{{ klient.telefon }}</span></span>
+          {% if klient.email %}<span>✉ {{ klient.email }}</span>{% endif %}
+          <span>{% icon "calendar" %} с {{ klient.data_registracii|date:"d.m.Y" }}</span>
+          {% if klient.user %}<span>{% icon "user" %} вход: {{ klient.user.username }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn--line" href="{% url 'klient_edit' klient.pk %}">{% icon "edit" %} Изменить</a>
+    <a class="btn" href="{% url 'zakaz_new' %}?klient={{ klient.pk }}">{% icon "plus" %} Новый заказ</a>
+  </div>
+</header>
+{% endblock %}
+{% block content %}
+<div class="split-left">
+  <div class="stack">
+    <section class="card">
+      <div class="card__head"><h3>Мерки</h3>{% if merki %}<span class="card__meta">{{ merki.data_snyatiya|date:"d.m.Y" }}</span>{% endif %}</div>
+      <div class="card__body">
+        {% if merki %}
+        <div class="measures mb-2">
+          <div class="measure"><div class="k">грудь</div><div class="v num">{{ merki.grud|floatformat:"-1" }}</div></div>
+          <div class="measure"><div class="k">талия</div><div class="v num">{{ merki.taliya|floatformat:"-1" }}</div></div>
+          <div class="measure"><div class="k">бёдра</div><div class="v num">{{ merki.bedra|floatformat:"-1" }}</div></div>
+        </div>
+        {% else %}<p class="muted">Мерки ещё не сняты.</p>{% endif %}
+        <a class="btn btn--line btn--sm btn--block" href="{% url 'merki_edit' klient.pk %}">{% icon "ruler" %} {% if merki %}Обновить мерки{% else %}Снять мерки{% endif %}</a>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card__head"><h3>Записи</h3></div>
+      <div class="card__body">
+        <ul class="list">{% for z in zapisi %}
+          <li><div class="datebox"><div class="m">{{ z.data|mes }}</div><div class="d">{{ z.data|date:"j" }}</div></div>
+            <div><div class="strong">{{ z.get_tip_zapisi_display }}</div><div class="sub">{% icon "clock" %} {{ z.vremya|time:"H:i" }}</div></div></li>
+        {% empty %}<li class="muted">Предстоящих записей нет.</li>{% endfor %}</ul>
+        <a class="btn btn--line btn--sm btn--block mt-2" href="{% url 'zapisi' %}?klient={{ klient.pk }}">{% icon "calendar" %} Записать</a>
+      </div>
+    </section>
+  </div>
+  <section class="card">
+    <div class="card__head"><h3>История заказов</h3><span class="card__meta">{{ zakazy|length }}</span></div>
+    <div class="card__body"><ul class="list">
+    {% for z in zakazy %}
+      <li class="is-link" data-href="{% url 'zakaz_detail' z.pk %}" style="align-items:flex-start">
+        <div class="art art--xs k-{{ z.model.kategoriya|kat }}">{% garment z.model.kategoriya %}</div>
+        <div class="grow">
+          <div class="between"><a class="strong" href="{% url 'zakaz_detail' z.pk %}">№{{ z.pk }} · {{ z.model.nazvanie }}</a><span class="pill {{ z.status|st }}">{{ z.get_status_display }}</span></div>
+          <div class="sub mb-2">оформлен {{ z.data_oformleniya|date:"d.m.Y" }} · <b class="num">{{ z.stoimost|rub }} ₽</b></div>
+          {% if z.status != "отменён" %}{% stepper z.status True %}{% endif %}
+        </div></li>
+    {% empty %}<li class="muted">Заказов пока нет.</li>{% endfor %}
+    </ul></div>
+  </section>
+</div>
+{% endblock %}

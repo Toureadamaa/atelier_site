@@ -1,0 +1,56 @@
+{% extends "atelier/base.html" %}{% load atelier_extras %}
+{% block title %}Каталог моделей{% endblock %}
+{% block head %}
+<section class="hero">
+  <div class="hero__ruler" aria-hidden="true"></div>
+  <div>
+    <div class="eyebrow">Коллекция ателье · сезон {% now "Y" %}</div>
+    <h1>Одежда, сшитая <em>по вашим меркам</em></h1>
+    <p>Выберите модель — мастер снимет мерки, подберёт ткань и проведёт примерки, пока изделие не сядет идеально.</p>
+    <div class="hero__stats">
+      <div><div class="v num">{{ n_modelei }}</div><div class="k">моделей в каталоге</div></div>
+      <div><div class="v num">{{ n_masterov }}</div><div class="k">мастеров в штате</div></div>
+      <div><div class="v num">{{ n_vydano }}</div><div class="k">изделий выдано</div></div>
+    </div>
+  </div>
+  <div class="hero__art" aria-hidden="true">{% garment "пальто" %}</div>
+</section>
+<div class="catalog-head">
+  <div><div class="eyebrow">Каталог</div><h2>Модели</h2></div>
+  <nav class="chips" aria-label="Категории">
+    <a class="chip {% if not tekushaya %}is-on{% endif %}" href="?">Все <span class="n">{{ n_modelei }}</span></a>
+    {% for val, label, n in kategorii %}
+    <a class="chip {% if tekushaya == val %}is-on{% endif %}" href="?kategoriya={{ val }}">{{ label }} <span class="n">{{ n }}</span></a>
+    {% endfor %}
+  </nav>
+</div>
+{% endblock %}
+{% block content %}
+<div class="models">
+  {% for m in modeli %}
+  <article class="model">
+    <div class="model__art k-{{ m.kategoriya|kat }}">
+      <span class="tag">{{ m.get_kategoriya_display }}</span>
+      <span class="model__no">№ {{ m.pk|stringformat:"02d" }}</span>
+      {% garment m.kategoriya %}
+    </div>
+    <div class="model__body">
+      <h3>{{ m.nazvanie }}</h3>
+      <p>{{ m.opisanie|default:"Индивидуальный пошив по меркам клиента." }}</p>
+      <div class="between">
+        <div class="price num"><small>от</small>{{ m.cena|rub }} ₽</div>
+        {% if is_agent or is_upr %}
+          <a class="btn btn--line btn--sm" href="{% url 'zakaz_new' %}?model={{ m.pk }}">{% icon "plus" %} Заказ</a>
+        {% elif not user.is_authenticated %}
+          <a class="btn btn--line btn--sm" href="{% url 'login' %}">Записаться</a>
+        {% elif is_klient %}
+          <a class="btn btn--line btn--sm" href="{% url 'moi_zapisi' %}">Записаться</a>
+        {% endif %}
+      </div>
+    </div>
+  </article>
+  {% empty %}
+  <div class="card card--pad empty" style="grid-column:1/-1">В этой категории пока нет моделей.</div>
+  {% endfor %}
+</div>
+{% endblock %}

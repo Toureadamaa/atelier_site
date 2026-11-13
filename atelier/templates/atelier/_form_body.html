@@ -1,0 +1,3 @@
+{% load atelier_extras %}
+{% for e in form.non_field_errors %}<div class="note note--danger mb-2">{% icon "alert" %}<div>{{ e }}</div></div>{% endfor %}
+{% for f in form %}{% field f %}{% endfor %}
