@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from .models import (Klient, Master, Material, Model, PoziciyaZakaza, Primerka, Zadacha, Zakaz,
                      Zapis)
-from .views import poisk_klientov, soobshenie_bd
+from .views import poisk_klientov, poyasnenie_bd, soobshenie_bd
 
 
 class OgranicheniyaTest(TestCase):
@@ -389,3 +389,16 @@ class ProverkaVBazeTest(TestCase):
                                     f"\"ck_модель_цена\". (547) (SQLExecDirectW); [01000] {d}Выполнение "
                                     f"данной инструкции было прервано. (3621)")
         self.assertEqual(soobshenie_bd(e), 'Конфликт инструкции INSERT с ограничением CHECK "ck_модель_цена".')
+
+    def test_ponyatnoe_soobshenie(self):
+        d = "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]"
+        e = IntegrityError("23000", f"[23000] {d}Нарушено \"uq_клиент_email\" ограничения UNIQUE KEY. "
+                                    f"Не удается вставить повторяющийся ключ в объект \"dbo.Клиент\". "
+                                    f"Повторяющееся значение ключа: (a@b.ru). (2627) (SQLExecDirectW)")
+        self.assertEqual(poyasnenie_bd(e), ("email", "Клиент с таким e-mail уже существует."))
+        e = IntegrityError("23000", f"[23000] {d}Конфликт инструкции INSERT с ограничением CHECK "
+                                    f"\"ck_запись_дата_время\". (547) (SQLExecDirectW)")
+        self.assertEqual(poyasnenie_bd(e), (None, "Дата и время записи не могут быть в прошлом."))
+        e = DatabaseError("42000", f"[42000] {d}Транзакция завершилась в триггере. (3609) (SQLExecDirectW); "
+                                   f"[01000] {d}ошибка: не более двух активных заказов (0)")
+        self.assertEqual(poyasnenie_bd(e), (None, "Не более двух активных заказов"))

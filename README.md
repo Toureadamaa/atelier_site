@@ -1,7 +1,14 @@
 # Ателье — application Django + SQL Server
 
-Implémentation du rapport « Проектирование базы данных швейного ателье ».
+Implémentation du rapport « Проектирование базы данных швейного ателье » —
+Туре А. А., groupe ИДБ-24-07, МГТУ «СТАНКИН».
 L'interface est en russe (comme le rapport), les explications ci-dessous sont en français.
+
+| Dossier | Contenu |
+|---|---|
+| `atelier/`, `config/`, `manage.py` | application web Django |
+| [`sql/ogranicheniya_p3_3.sql`](sql/ogranicheniya_p3_3.sql) | les 26 contraintes du § 3.3 (CHECK, UNIQUE, NOT NULL, triggers) |
+| [`docs/ogranicheniya.md`](docs/ogranicheniya.md) | chaque contrainte suivie de son code SQL |
 
 ## 1. Prérequis (Windows)
 
@@ -79,8 +86,9 @@ comme une application, en plein écran, avec sa propre icône.
 
 ## 4 ter. Contraintes du § 3.3 : vérifiées par SQL Server
 
-Les 26 règles sont créées dans la base `projet corse` par votre script SQL (SSMS) :
-contraintes `CHECK`, `UNIQUE`, `NOT NULL`, clés étrangères et triggers.
+Les 26 règles sont créées dans la base `projet corse` par le script
+[`sql/ogranicheniya_p3_3.sql`](sql/ogranicheniya_p3_3.sql) (à exécuter dans SSMS) :
+contraintes `CHECK`, `UNIQUE`, `NOT NULL` et triggers.
 
 Réglage `PROVERKA_V_BAZE` dans `config/settings.py` :
 
@@ -132,7 +140,7 @@ Chaque champ Django indique sa colonne avec `db_column="..."` et chaque modèle 
 ### Où sont les contraintes du chapitre 3.3
 
 - **Dans la base** (visibles dans SSMS, dossiers *Ключи*, *Ограничения*, *Триггеры* de chaque table) :
-  toutes les règles, créées par votre script SQL.
+  toutes les règles, créées par `sql/ogranicheniya_p3_3.sql`.
 - **Dans le code** (`atelier/models.py`) : les mêmes règles en `clean()` / `Meta.constraints`, utilisées
   seulement si `PROVERKA_V_BAZE = False` (et pour les tests sur SQLite).
 
@@ -166,6 +174,8 @@ atelier/management/commands/zapolnit.py   comptes et données de test
 atelier/management/commands/proverit_bd.py vérification des tables
 atelier/migrations/0002_dopolnit_tablicy.py colonnes ajoutées (SQL Server)
 atelier/tests.py             tests automatiques
+sql/ogranicheniya_p3_3.sql   les 26 contraintes du § 3.3 (SQL Server)
+docs/ogranicheniya.md        chaque contrainte avec son code
 ```
 
 ## Problèmes fréquents
