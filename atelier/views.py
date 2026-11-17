@@ -77,6 +77,17 @@ def poyasnenie_bd(e):
         return None, t[:1].upper() + t[1:]
     return None, "База данных отклонила изменение: " + t
 
+def tekst_oshibok(form):
+    """Все ошибки формы одной строкой — чтобы показать настоящую причину вверху страницы."""
+    if form is None:
+        return ""
+    chasti = []
+    for pole, spisok in form.errors.items():
+        imya = form.fields[pole].label if pole in form.fields else None
+        for e in spisok:
+            chasti.append(f"{imya}: {e}" if imya else e)
+    return " ".join(chasti)
+
 
 def save_or_error(form, posle=None):
     """Сохраняет форму в базу данных.
@@ -163,7 +174,12 @@ def zakaz_detail(request, pk):
             ok = zadacha_form.is_valid() and save_or_error(zadacha_form)
             if ok and zakaz.status == Zakaz.Status.NOVYI:
                 zakaz.status = Zakaz.Status.V_RABOTE
-                zakaz.save(update_fields=["status"])
+                try:   # триггер может отклонить: например, плановая дата уже прошла
+                    with transaction.atomic():
+                        zakaz.save(update_fields=["status"])
+                except DatabaseError as e:
+                    messages.error(request, "Задача назначена, но статус заказа не изменён: "
+                                   + poyasnenie_bd(e)[1])
         elif action == "material" and upr:
             material_form = f.PoziciyaZakazaForm(request.POST, prefix="mt")
             material_form.instance.zakaz = zakaz
@@ -178,7 +194,9 @@ def zakaz_detail(request, pk):
         if ok:
             messages.success(request, "Изменения сохранены.")
             return redirect("zakaz_detail", pk=zakaz.pk)
-        messages.error(request, "Исправьте ошибки в форме.")
+        forma = {"status": status_form, "zadacha": zadacha_form,
+                 "material": material_form, "primerka": primerka_form}.get(action)
+        messages.error(request, tekst_oshibok(forma) or "Исправьте ошибки в форме.")
 
     return render(request, "atelier/zakaz_detail.html", {
         "zakaz": zakaz,

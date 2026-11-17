@@ -14,8 +14,8 @@ PROVERKA_V_BAZE (config/settings.py), Django эти правила НЕ пров
 Если PROVERKA_V_BAZE выключить, правила проверяет и Django:
 Meta.constraints, clean() и минимальные значения полей.
 """
-from datetime import datetime
-from decimal import Decimal
+from datetime import datetime, timedelta
+from decimal import Decimal                              
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -217,10 +217,10 @@ class Zakaz(ModelAteliera):
         ordering = ["-data_oformleniya", "-id"]
         constraints = [
             models.CheckConstraint(condition=Q(stoimost__gt=0), name="ck_zakaz_stoimost"),
-            # как в вашей таблице: Дата_завершения > Дата_оформления
+            # ограничение 5: дата завершения не раньше даты оформления
             models.CheckConstraint(
                 condition=Q(data_zaversheniya__isnull=True)
-                | Q(data_zaversheniya__gt=F("data_oformleniya")),
+                | Q(data_zaversheniya__gte=F("data_oformleniya")),
                 name="ck_zakaz_daty"),
             models.CheckConstraint(
                 condition=Q(status__in=[c[0] for c in StatusZakaza.choices]),
@@ -244,8 +244,8 @@ class Zakaz(ModelAteliera):
         if self.data_oformleniya and self.data_oformleniya > today():
             errors["data_oformleniya"] = "Дата оформления не может быть в будущем."
         if (self.data_oformleniya and self.data_zaversheniya
-                and self.data_zaversheniya <= self.data_oformleniya):
-            errors["data_zaversheniya"] = "Дата завершения должна быть позже даты оформления."
+                and self.data_zaversheniya < self.data_oformleniya):
+            errors["data_zaversheniya"] = "Дата завершения не может быть раньше даты оформления."
         # не более двух активных заказов у клиента
         if self.klient_id and self.status in self.AKTIVNYE_STATUSY:
             drugie = self.klient.aktivnye_zakazy().exclude(pk=self.pk).count()
@@ -255,14 +255,21 @@ class Zakaz(ModelAteliera):
         if errors:
             raise ValidationError(errors)
 
+    SROK_DNEI = 21   # плановый срок нового заказа, дней
+
     def save(self, *args, **kwargs):
         # стоимость по умолчанию — цена выбранной модели
         if self.stoimost is None and self.model_id:
             self.stoimost = self.model.cena
-        # при выдаче ставим дату завершения (если она позже даты оформления)
-        if (self.status == self.Status.VYDAN and not self.data_zaversheniya
-                and self.data_oformleniya and today() > self.data_oformleniya):
-            self.data_zaversheniya = today()
+        # новый заказ без даты завершения: плановая дата — через SROK_DNEI дней
+        if self._state.adding and not self.data_zaversheniya and self.status in self.AKTIVNYE_STATUSY:
+            self.data_zaversheniya = today() + timedelta(days=self.SROK_DNEI)
+        # заказ выдают: дата завершения становится фактической датой выдачи (сегодня)
+        if self.status == self.Status.VYDAN:
+            staryi_status = None if self._state.adding else (
+                Zakaz.objects.filter(pk=self.pk).values_list("status", flat=True).first())
+            if staryi_status != self.Status.VYDAN:
+                self.data_zaversheniya = today()
         super().save(*args, **kwargs)
 
 

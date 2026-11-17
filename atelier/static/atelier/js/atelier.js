@@ -37,7 +37,7 @@
     var b = e.target.closest("[data-close]");
     if (b) hideToast(b.closest(".toast"));
   });
-  document.querySelectorAll(".toast").forEach(function (t) { setTimeout(function () { hideToast(t); }, 7000); });
+    document.querySelectorAll(".toast:not(.toast--error)").forEach(function (t) { setTimeout(function () { hideToast(t); }, 7000); });
 
   /* 4. Строки таблиц и элементы списков — ссылки */
   document.querySelectorAll("[data-href]").forEach(function (r) {
